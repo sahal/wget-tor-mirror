@@ -15,6 +15,7 @@ recently (May'14) written a bash mirror setup script. [3] You might want
 to use that instead.
 
 Files:
+
 * defaults.cfg - default configuration (e.g. set which torbrowser 
                  locales you want to mirror)
 * wget-tor-mirror - downloads the dist directory
@@ -25,20 +26,28 @@ Files:
 * dist/README.html - copied from torproject.org (see COPYING)
 
 Use:
+
 To download a partial mirror of the main mirror (configure via defaults.cfg)
-  $ ./wget-tor-mirror
+
+    $ ./wget-tor-mirror
 
 To delete~ stale tor versions (~check out the file itself for more options)
-  $ ./remove-old
+
+    $ ./remove-old
 
 To check cryptographic signatures (bang bang!)
-  $ # import gpg keys [4] from keys.gnupg.net (or another server)
-  $ gpg --keyserver hkp://keys.example.org --recv-keys 0x00000000 0x00000001 ...
+
+    $ # import gpg keys [4] from keys.gnupg.net (or another server)
+    $ gpg --keyserver hkp://keys.example.org --recv-keys 0x00000000 0x00000001 ...
 
 Run this every 6 hours by adding the following line to your crontab:
-<insert random number from 0-59> */6 * * * /path/to/wget-tor-mirror
+
+    <insert random number from 0-59> */6 * * * /path/to/wget-tor-mirror
 
 1: https://www.torproject.org/dist/
+
 2: https://www.torproject.org/docs/running-a-mirror.html.en
+
 3: https://github.com/wpapper/tor-download-web
+
 4: https://www.torproject.org/docs/signing-keys.html.en
