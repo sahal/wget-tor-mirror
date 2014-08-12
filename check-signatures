@@ -5,7 +5,6 @@
 # Don't forget to import GPG/PGP keys before running this script
 # torproject package signer keyIDs: https://www.torproject.org/docs/signing-keys.html.en
 # add the keys to the list yourself -- slave days are over
-
 #gpg --keyserver hkp://keys.gnupg.net/ --recv-keys <list of keys here seperated by spaces>
 
 # import some variables
@@ -40,5 +39,5 @@ done
 # clean up and format the $result file
 # you can remove the  ^WARNING line from gpg's output because it's not very useful :/
 #grep -v WARNING < "$result" | grep -v owner\.$
-sed -e s/^gpg/\ \ \ \ \ gpg/ -e s/^Primary/\ \ \ \ \ Primary/ -e s@^/@\\n/@ < $result  > "$tmpdir"/waxonwaxoff
+sed -e s/^gpg/\ \ \ \ \ gpg/ -e s/^Primary/\ \ \ \ \ Primary/ -e s@^/@\\n/@ < "$result"  > "$tmpdir"/waxonwaxoff
 mv "$tmpdir"/waxonwaxoff "$result"

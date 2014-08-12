@@ -8,6 +8,13 @@
 # import some variables
 source defaults.cfg
 
+# todo: explain these arguments to the user...
+if [ -z $1 ]; then
+	echo "Please run this script with an argument, e.g.:"
+	echo "./remove-old genignore|noaccess|duh|delete"
+	exit 1
+fi
+
 # FUNCTION: bash array diff example from http://bit.ly/Lm9bS2
 diff(){
   awk 'BEGIN{RS=ORS=" "}
@@ -57,6 +64,5 @@ do
 	*)
 		# just print the damn names!
 		echo "$fullpath"
-		exit 1 
 	esac
 done
