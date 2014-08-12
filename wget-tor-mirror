@@ -1,0 +1,74 @@
+#!/bin/bash
+# ./wget-tor-mirror - a crappy/quickly hacked up script to mirror tor
+# by Sahal Ansari github.com/sahal
+
+# import some variables
+source defaults.cfg
+
+function findurls () {
+# hopefully we don't have more than one a tag per line
+# torproject.org runs apache (which prints one a tag per line on default), but who knows?
+# if you really care about this issue use: http://sed.sourceforge.net/grabbag/scripts/list_urls.sed
+#$FINDURLS
+  grep a\  | sed -e s/.*href=\"// -e s/\".*// #< echo "$1"
+}
+
+function download () {
+# hey, i love wget! but if you don't use curl (or something else)
+
+if [ -z "$2"  ]; then 
+  wget --quiet -O - "$1"
+else
+  wget --quiet -nc -i "$1" --base="$2"
+  # you can rate limit your self if you have a slow connection here, e.g.: 
+  #wget --limit-rate=25k --quiet -nc -i "$1" --base="$2"
+fi
+}
+
+### MAKE DIRECTORIES
+
+mkdir -p "$tmpdir"
+mkdir -p "$dldir"/vidalia-bundles/
+mkdir -p "$dldir"/torbrowser/
+
+### GET FILE NAMES TO DOWNLOAD
+
+cd "$tmpdir"
+
+# tor-source tarballs
+download "$MIRROR" | findurls | grep tor\- > tor-source
+
+# vidalia-bundles
+download "$MIRROR/vidalia-bundles/" | findurls | grep vidalia > vidalia-bundles
+
+# torbrowser bundles
+versions=( $(download "$MIRROR/torbrowser/" | findurls | grep ^[0-9] ) )
+# loop into each folder and grab osx, win32, and linux binaries
+for (( i=0; i<"${#versions[@]}"; i++))
+do
+	download "$MIRROR/torbrowser/${versions[i]}" | findurls > "torbrowser-${versions[i]%/*}"
+done
+
+# only download the locales specified in $BUNDLE_LOCALES
+find . -name "torbrowser-[0-9]*" -type f -print | xargs grep -E -h "($BUNDLE_LOCALES)" > torbrowser-wantedlocales
+
+### DOWNLOAD FILES
+
+cd $dldir
+
+# tor-source tarballs
+download "$tmpdir/tor-source" "$MIRROR/"
+
+# vidalia-bundles
+cd "$dldir"/vidalia-bundles/
+download "$tmpdir/vidalia-bundles" "$MIRROR/vidalia-bundles/"
+
+# torbrowser bundles
+cd "$dldir"/torbrowser/
+for (( i=0; i < "${#versions[@]}"; i++ ))
+do
+	mkdir -p "${versions[i]%/*}"
+	cd "${versions[i]%/*}"
+	grep "${versions[i]%/*}" < "$tmpdir/torbrowser-wantedlocales" | download "-" "$MIRROR/torbrowser/${versions[i]}/"
+	cd ../
+done

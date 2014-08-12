@@ -1,0 +1,44 @@
+#!/bin/bash
+# check-signatures - checks cryptographic signatures of all downloaded files
+# by Sahal Ansari github.com/sahal/
+#
+# Don't forget to import GPG/PGP keys before running this script
+# torproject package signer keyIDs: https://www.torproject.org/docs/signing-keys.html.en
+# add the keys to the list yourself -- slave days are over
+
+#gpg --keyserver hkp://keys.gnupg.net/ --recv-keys <list of keys here seperated by spaces>
+
+# import some variables
+source defaults.cfg
+
+cd "$dldir"
+
+rm -f "$result"
+
+# put list of files in dldir into array a
+a=( $(find . -name "*.asc" -type f) )
+
+# check signatures in array
+for var in "${a[@]}"
+do
+	  # i am getting tired of writing all this out
+	  filename="$dldir${var##\.}"
+
+          # just print the damn names!
+          echo -ne "$filename"\\n >> "$result" 2>&1
+
+	  # check the signature and write the result to a file silently
+	  gpg --verify "$filename" >> "$result" 2>&1
+
+	  # print whether it passed or not
+	  # don't care if the signature is good -- only if its bad!
+	  if [ "$?" != "0" ]; then
+	  	echo "WARNING: $filename signature is bad!" #>> "$result" 2>&1
+	  fi
+done
+
+# clean up and format the $result file
+# you can remove the  ^WARNING line from gpg's output because it's not very useful :/
+#grep -v WARNING < "$result" | grep -v owner\.$
+sed -e s/^gpg/\ \ \ \ \ gpg/ -e s/^Primary/\ \ \ \ \ Primary/ -e s@^/@\\n/@ < $result  > "$tmpdir"/waxonwaxoff
+mv "$tmpdir"/waxonwaxoff "$result"
