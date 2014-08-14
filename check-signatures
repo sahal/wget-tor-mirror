@@ -37,7 +37,5 @@ do
 done
 
 # clean up and format the $result file
-# you can remove the  ^WARNING line from gpg's output because it's not very useful :/
-#grep -v WARNING < "$result" | grep -v owner\.$
 sed -e s/^gpg/\ \ \ \ \ gpg/ -e s/^Primary/\ \ \ \ \ Primary/ -e s@^/@\\n/@ < "$result"  > "$tmpdir"/waxonwaxoff
 mv "$tmpdir"/waxonwaxoff "$result"
