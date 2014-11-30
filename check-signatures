@@ -1,10 +1,10 @@
 #!/bin/bash
 # check-signatures - checks cryptographic signatures of all downloaded files
-# by Sahal Ansari github.com/sahal/
-#
-# Don't forget to import GPG/PGP keys before running this script
+# by Sahal Ansari github@sahal.info
+# use: ./check-signatures [force]
+
+# Import GnuPG/PGP keys before running this script
 # torproject package signer key fingerprints: https://www.torproject.org/docs/signing-keys.html.en
-# add the keys to the list yourself -- slave days are over
 # please don't use 32bit keyIDs: https://evil32.com/
 #wget --quiet -O - https://www.torproject.org/docs/signing-keys.html.en | grep "Key\ fingerprint" | sed 's/.*\=\ //' | tr -d "\ "
 #gpg --keyserver hkp://keys.gnupg.net/ --fingerprint --recv-keys <list of key fingerprints here seperated by spaces>
@@ -12,9 +12,28 @@
 # import some variables
 source defaults.cfg
 
+function do_gpgidchk {
+gpg --list-keys --fingerprint | grep "Key\ fingerprint"| sed 's/.*\=\ //' | tr -d "\ " | sed 's/.\{32\}//' | sort | uniq -c | sed 's/\ \{6\}//' | grep -v ^1
+if [ "$?" -eq "0" ]; then
+    echo "WARNING: At least two keys in your keyring share 32bit KeyIDs."
+    echo "         Double check output of \`gpg --list-keys --fingerprint\` More Info: https://evil32.com/" 
+    echo "         If nothing looks suspicious re-run this script: ./check-signatures force"
+    exit 1
+fi
+}
+
+if [ "$1" == "force" ]; then
+    echo "WARNING: This script will not test whether or not 32bit KeyIDS for any of the keys in your GPG keyring match."
+    echo "         This could be dangerous depending on how you imported your GPG keys. More Info: https://evil32.com/"
+else
+    do_gpgidchk
+fi
+
 cd "$dldir"
 
-rm -f "$result"
+if [ -f "$result" ]; then
+    rm -f "$result"
+fi
 
 # put list of files in dldir into array a
 a=( $(find . -name "*.asc" -type f) )
@@ -39,5 +58,7 @@ do
 done
 
 # clean up and format the $result file
-sed -e s/^gpg/\ \ \ \ \ gpg/ -e s/^Primary/\ \ \ \ \ Primary/ -e s@^/@\\n/@ < "$result"  > "$tmpdir"/waxonwaxoff
-mv "$tmpdir"/waxonwaxoff "$result"
+if [ -f "$result" ]; then
+    sed -e 's/^gpg/\ \ \ \ \ gpg/' -e 's/^Primary/\ \ \ \ \ Primary/' -e 's@^/@\\n/@' < "$result"  > "$tmpdir"/waxonwaxoff
+    mv "$tmpdir"/waxonwaxoff "$result"
+fi
