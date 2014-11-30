@@ -3,9 +3,11 @@
 # by Sahal Ansari github.com/sahal/
 #
 # Don't forget to import GPG/PGP keys before running this script
-# torproject package signer keyIDs: https://www.torproject.org/docs/signing-keys.html.en
+# torproject package signer key fingerprints: https://www.torproject.org/docs/signing-keys.html.en
 # add the keys to the list yourself -- slave days are over
-#gpg --keyserver hkp://keys.gnupg.net/ --recv-keys <list of keys here seperated by spaces>
+# please don't use 32bit keyIDs: https://evil32.com/
+#wget --quiet -O - https://www.torproject.org/docs/signing-keys.html.en | grep "Key\ fingerprint" | sed 's/.*\=\ //' | tr -d "\ "
+#gpg --keyserver hkp://keys.gnupg.net/ --fingerprint --recv-keys <list of key fingerprints here seperated by spaces>
 
 # import some variables
 source defaults.cfg
