@@ -28,7 +28,7 @@ cd "$dldir"
 a=( $(find . -name "*.asc" -o -name "*.gz" -o -name "*.xz" -o -name "*.asc" -o -name "*.dmg" -o -name "*.exe" | sed -e s@\./@@ -e s@.*/@@ | sort | uniq ))
 
 # these are the only files that should be there (current mirror)
-b=( $( cat "$tmpdir"/torbrowser-wantedlocales "$tmpdir"/vidalia-bundles "$tmpdir"/tor-source | sort | uniq ) )
+b=( $( cat "$tmpdir"/torbrowser-wantedlocales "$tmpdir"/tor-source | sort | uniq ) )
 
 # files that need to be removed
 c=($(diff a[@] b[@]))

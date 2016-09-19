@@ -2,9 +2,9 @@ wget-tor-mirror
 ===============
 
 This should help you create a partial mirror of torproject.org. [1] A full
-mirror will use 8.0 GB of disk space. [2] This partial dist/ mirror only 
-requires ~500ish MB depending on which torbrowser locales you choose
-to mirror. (see defaults.cfg)
+mirror will use much more than 8.0 GB of disk space. [2] This partial mirror 
+requires about 1.5 GB (for en-US and zh-CN) depending on which torbrowser 
+locales you choose to mirror. (see defaults.cfg)
 
 Instead of using rsync, like recommended [2], wget is used with -N
 (or -nc).
@@ -35,10 +35,22 @@ To delete~ stale tor versions (~check out the file itself for more options)
 
     $ ./remove-old
 
-To check cryptographic signatures (bang bang!)
+To check cryptographic signatures (bang bang!), you'll first need to import keys:
 
     $ # import gpg keys [4] from keys.gnupg.net (or another server)
     $ gpg --keyserver hkp://keys.example.org --recv-keys 0x00000000 0x00000001 ...
+
+Assuming you trust me, here's a one liner that'll add all gpg keyfingerprints 
+from torproject.org:
+
+    $ gpg --keyserver hkp://keys.gnupg.net/ --fingerprint --recv-key $(wget --quiet -O - https://www.torproject.org/docs/signing-keys.html.en | grep "Key\ fingerprint" | sed 's/.*\=\ //' | tr -d "\ "| tr '\n' '\ ')
+
+Once you have all the gpg keys necessary, simply run check-signatures:
+
+    $ ./check-signatures
+
+The check-signatures script will only output if a signature could not be verified.
+Full results can be seen in the $results file.
 
 Run this every 6 hours by adding the following line to your crontab:
 

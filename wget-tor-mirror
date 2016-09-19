@@ -2,10 +2,14 @@
 # ./wget-tor-mirror - a crappy/quickly hacked up script to mirror tor
 # by Sahal Ansari github.com/sahal
 
+# stay safe 
+set -e
+set -u
+
 # import some variables
 source defaults.cfg
 
-function findurls () {
+findurls() {
 # hopefully we don't have more than one a tag per line
 # torproject.org runs apache (which prints one a tag per line on default), but who knows?
 # if you really care about this issue use: http://sed.sourceforge.net/grabbag/scripts/list_urls.sed
@@ -13,62 +17,70 @@ function findurls () {
   grep a\  | sed -e s/.*href=\"// -e s/\".*// #< echo "$1"
 }
 
-function download () {
-# hey, i love wget! but if you don't use curl (or something else)
-
-if [ -z "$2"  ]; then 
-  wget --quiet -O - "$1"
+download() {
+if [ "${2:-unset}" == "unset" ]; then 
+  wget --quiet -O - "$1" || true
 else
   wget --quiet -nc -i "$1" --base="$2"
-  # you can rate limit your self if you have a slow connection here, e.g.: 
-  #wget --limit-rate=25k --quiet -nc -i "$1" --base="$2"
+fi
+}
+
+say_this() {
+if [[ $1 == "n" ]]; then
+  echo -n "$2"
+else
+  echo "$1"
 fi
 }
 
 ### MAKE DIRECTORIES
 
 mkdir -p "$tmpdir"
-mkdir -p "$dldir"/vidalia-bundles/
 mkdir -p "$dldir"/torbrowser/
 
 ### GET FILE NAMES TO DOWNLOAD
 
 cd "$tmpdir"
 
+say_this n "Getting a list of tor sources . . . "
 # tor-source tarballs
 download "$MIRROR" | findurls | grep tor\- > tor-source
-
-# vidalia-bundles
-download "$MIRROR/vidalia-bundles/" | findurls | grep vidalia > vidalia-bundles
+say_this "Done."
 
 # torbrowser bundles
+say_this n "Getting a list of tor browser bundles . . . "
 versions=( $(download "$MIRROR/torbrowser/" | findurls | grep ^[0-9] ) )
 # loop into each folder and grab osx, win32, and linux binaries
 for (( i=0; i<"${#versions[@]}"; i++))
 do
-	download "$MIRROR/torbrowser/${versions[i]}" | findurls > "torbrowser-${versions[i]%/*}"
+  download "$MIRROR/torbrowser/${versions[i]}" | findurls > "torbrowser-${versions[i]%/*}"
 done
-
-# only download the locales specified in $BUNDLE_LOCALES
-find . -name "torbrowser-[0-9]*" -type f -print | xargs grep -E -h "($BUNDLE_LOCALES)" > torbrowser-wantedlocales
+say_this "Done."
 
 ### DOWNLOAD FILES
 
-cd $dldir
+cd "$dldir"
 
 # tor-source tarballs
+say_this n "Downloading tor source files . . . "
 download "$tmpdir/tor-source" "$MIRROR/"
-
-# vidalia-bundles
-cd "$dldir"/vidalia-bundles/
-download "$tmpdir/vidalia-bundles" "$MIRROR/vidalia-bundles/"
+say_this "Done."
 
 # torbrowser bundles
+say_this "Downloading tor browser bundles . . . "
 cd "$dldir"/torbrowser/
 for (( i=0; i < "${#versions[@]}"; i++ ))
 do
-	mkdir -p "${versions[i]%/*}"
-	cd "${versions[i]%/*}"
-	grep "${versions[i]%/*}" < "$tmpdir/torbrowser-wantedlocales" | download "-" "$MIRROR/torbrowser/${versions[i]}/"
-	cd ../
+  mkdir -p "${versions[i]%/*}"
+  cd "${versions[i]%/*}"
+  for filename in $( grep "${versions[i]%/*}" "$tmpdir"/torbrowser-"${versions[i]%/*}" | grep -E "${BUNDLE_LOCALES:-EN-US}" | grep -vE "$SKIP_FILES" | tr '\n' '\ '); do
+    echo -n "  Downloading :" "${versions[i]}""$filename"
+    temp_file="$(mktemp --tmpdir=$tmpdir)"
+    echo "$filename" | tee -a "$temp_file" 2>&1 > /dev/null
+    download "$temp_file" "$MIRROR/torbrowser/${versions[i]}"
+    rm "$temp_file"
+    say_this " Done."
+  done
+  cd ../
 done
+say_this "Done."

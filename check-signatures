@@ -59,6 +59,5 @@ done
 
 # clean up and format the $result file
 if [ -f "$result" ]; then
-    sed -e 's/^gpg/\ \ \ \ \ gpg/' -e 's/^Primary/\ \ \ \ \ Primary/' -e 's@^/@\\n/@' < "$result"  > "$tmpdir"/waxonwaxoff
-    mv "$tmpdir"/waxonwaxoff "$result"
+    sed -i -e 's/^gpg/\ \ \ \ \ gpg/' -e 's/^Primary/\ \ \ \ \ Primary/' -e 's@^/@\n/@' "$result"
 fi
