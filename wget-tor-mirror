@@ -18,6 +18,7 @@ findurls() {
 }
 
 download() {
+# todo: correctly handle at least some wget exit codes
 if [ "${2:-unset}" == "unset" ]; then 
   wget --quiet -O - "$1" || true
 else
